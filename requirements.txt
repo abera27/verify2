@@ -1,5 +1,4 @@
-pydub
-pyaudio
 flask
 requests
-discord.py
+python-dotenv
+user-agents
