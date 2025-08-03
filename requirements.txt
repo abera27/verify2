@@ -1,5 +1,5 @@
-
 flask
 requests
 python-dotenv
 user-agents
+discord.py==2.3.2
