@@ -1,0 +1,14 @@
+
+
+<!DOCTYPE html>
+<html><body>
+    <h1>アクセスログ</h1>
+    {% for id, log in logs.items() %}
+    <div>
+        <p><strong>{{ log.username }}</strong> (ID: {{ id }})</p>
+        <p>IP: {{ log.ip }} / 国: {{ log.country }} / 地域: {{ log.region }}</p>
+        <p>UA: {{ log.user_agent }}</p>
+    </div>
+    <hr>
+    {% endfor %}
+</body></html>

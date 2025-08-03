@@ -1,0 +1,160 @@
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Discord Verify</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      background: #0b0d17; /* 元の背景そのまま */
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 36px;
+      z-index: 1;
+      text-shadow:
+        0 0 15px rgba(88,101,242,0.9);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      user-select: none;
+    }
+
+    a.verify-btn {
+      position: relative;
+      display: inline-block;
+      padding: 20px 56px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #5865f2, #4752c4);
+      border-radius: 20px;
+      text-decoration: none;
+      box-shadow:
+        0 0 40px #5865f2,
+        0 0 70px #4752c4,
+        inset 0 -8px 25px rgba(255,255,255,0.3);
+      overflow: hidden;
+      transition: all 0.35s ease;
+      z-index: 1;
+      user-select: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      filter: drop-shadow(0 0 8px #5865f2);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ボタン光沢アニメーション */
+    a.verify-btn::before {
+      content: "";
+      position: absolute;
+      top: -90%;
+      left: -60%;
+      width: 220%;
+      height: 220%;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.3), transparent 70%);
+      animation: shine 3.5s linear infinite;
+      border-radius: 20px;
+      z-index: 0;
+      pointer-events: none;
+      filter: drop-shadow(0 0 10px #99aaff);
+    }
+
+    /* スウィープ光ライン */
+    a.verify-btn::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -55%;
+      width: 55%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255,255,255,0.2), transparent);
+      transform: skewX(-25deg);
+      animation: sweep 2.8s ease-in-out infinite;
+      border-radius: 20px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    @keyframes shine {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+
+    @keyframes sweep {
+      0%, 100% { left: -55%; opacity: 0; }
+      50% { left: 120%; opacity: 1; }
+    }
+
+    a.verify-btn:hover,
+    a.verify-btn:focus-visible {
+      background: linear-gradient(135deg, #7289da, #5865f2);
+      box-shadow:
+        0 0 70px #7289da,
+        0 0 110px #5865f2,
+        inset 0 -12px 40px rgba(255,255,255,0.45);
+      transform: scale(1.12);
+      filter: drop-shadow(0 0 12px #7289da);
+      outline: none;
+    }
+
+    a.verify-btn:active {
+      transform: scale(0.95);
+      box-shadow:
+        0 0 30px #4a5ea9,
+        inset 0 -6px 20px rgba(255,255,255,0.25);
+      filter: drop-shadow(0 0 6px #4a5ea9);
+    }
+
+    footer {
+      position: fixed;
+      bottom: 15px;
+      font-size: 0.9rem;
+      color: #ccc;
+      width: 100%;
+      text-align: center;
+      z-index: 1;
+      user-select: none;
+      text-shadow: 0 0 8px rgba(0,0,0,0.8);
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2.4rem;
+        margin-bottom: 28px;
+      }
+      a.verify-btn {
+        font-size: 1.3rem;
+        padding: 18px 44px;
+        border-radius: 16px;
+        letter-spacing: 1.5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>認証してメンバーになろう！</h1>
+  <a class="verify-btn" href="{{ discord_auth_url }}">✅ VERIFY</a>
+  <footer>© black_.ルアン.</footer>
+</body>
+</html>
