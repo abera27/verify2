@@ -1,4 +1,5 @@
-flask
+pydub
+pyaudioflask
 requests
 python-dotenv
 user-agents
