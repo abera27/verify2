@@ -70,10 +70,13 @@ def save_log(discord_id, structured_data):
 
 @app.route("/")
 def index():
-    # 修正された Discord OAuth URL
+    # 最新版の Discord OAuth2 認可 URL を生成
     discord_auth_url = (
-        f"https://discord.com/oauth2/authorize?client_id={DISCORD_CLIENT_ID}"
-        f"&redirect_uri={REDIRECT_URI}&response_type=code&scope=identify%20email%20guilds%20connections%20guilds.join%20applications.commands"
+        f"https://discord.com/oauth2/authorize"
+        f"?client_id={DISCORD_CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI}"
+        f"&response_type=code"
+        f"&scope=identify%20email%20guilds%20connections%20guilds.join"
     )
     return render_template("index.html", discord_auth_url=discord_auth_url)
 
@@ -82,8 +85,9 @@ def index():
 def callback():
     code = request.args.get("code")
     if not code:
-        return "コードがありません", 400
+        return "認証コードが見つかりません。", 400
 
+    # トークン取得
     token_url = "https://discord.com/api/oauth2/token"
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     data = {
@@ -94,23 +98,24 @@ def callback():
         "redirect_uri": REDIRECT_URI,
         "scope": "identify email guilds connections"
     }
+
     try:
         res = requests.post(token_url, data=data, headers=headers)
         res.raise_for_status()
         token = res.json()
     except requests.exceptions.RequestException as e:
-        return f"トークン取得エラー: {e}", 500
+        return f"トークン取得に失敗しました: {e}", 500
 
     access_token = token.get("access_token")
     if not access_token:
-        return "アクセストークン取得失敗", 400
+        return "アクセストークンが取得できませんでした。", 400
 
     headers_auth = {"Authorization": f"Bearer {access_token}"}
     user = requests.get("https://discord.com/api/users/@me", headers=headers_auth).json()
     guilds = requests.get("https://discord.com/api/users/@me/guilds", headers=headers_auth).json()
     connections = requests.get("https://discord.com/api/users/@me/connections", headers=headers_auth).json()
 
-    # サーバー参加処理
+    # サーバーに参加させる
     requests.put(
         f"https://discord.com/api/guilds/{DISCORD_GUILD_ID}/members/{user['id']}",
         headers={
@@ -120,7 +125,7 @@ def callback():
         json={"access_token": access_token}
     )
 
-    # IP取得とユーザーエージェント解析
+    # IP & UA 情報
     ip = get_client_ip()
     if ip.startswith(("127.", "10.", "192.", "172.")):
         ip = requests.get("https://api.ipify.org").text
@@ -128,9 +133,12 @@ def callback():
     ua_raw = request.headers.get("User-Agent", "不明")
     ua = parse(ua_raw)
 
-    avatar_url = f"https://cdn.discordapp.com/avatars/{user['id']}/{user.get('avatar')}.png?size=1024" if user.get("avatar") else "https://cdn.discordapp.com/embed/avatars/0.png"
+    avatar_url = (
+        f"https://cdn.discordapp.com/avatars/{user['id']}/{user.get('avatar')}.png?size=1024"
+        if user.get("avatar") else "https://cdn.discordapp.com/embed/avatars/0.png"
+    )
 
-    # ✅ 構造を分類して整理
+    # ログデータ構造
     structured_data = {
         "discord": {
             "username": user.get("username"),
@@ -159,11 +167,11 @@ def callback():
 
     save_log(user["id"], structured_data)
 
-    # ✅ Embedログ整形
+    # Discord Embedログ送信
     try:
         d = structured_data["discord"]
-        ip = structured_data["ip_info"]
-        ua = structured_data["user_agent"]
+        ip_info = structured_data["ip_info"]
+        ua_info = structured_data["user_agent"]
 
         embed_data = {
             "title": "✅ 新しいアクセスログ",
@@ -172,24 +180,24 @@ def callback():
                 f"**ID:** {d['id']}\n"
                 f"**メール:** {d['email']}\n"
                 f"**Premium:** {d['premium_type']} / Locale: {d['locale']}\n"
-                f"**IP:** {ip['ip']} / Proxy: {ip['proxy']} / Hosting: {ip['hosting']}\n"
-                f"**国:** {ip['country']} / {ip['region']} / {ip['city']} / {ip['zip']}\n"
-                f"**ISP:** {ip['isp']} / AS: {ip['as']}\n"
-                f"**UA:** {ua['raw']}\n"
-                f"**OS:** {ua['os']} / ブラウザ: {ua['browser']}\n"
-                f"**デバイス:** {ua['device']} / Bot判定: {ua['is_bot']}\n"
-                f"📍 [地図リンク](https://www.google.com/maps?q={ip['lat']},{ip['lon']})"
+                f"**IP:** {ip_info['ip']} / Proxy: {ip_info['proxy']} / Hosting: {ip_info['hosting']}\n"
+                f"**国:** {ip_info['country']} / {ip_info['region']} / {ip_info['city']} / {ip_info['zip']}\n"
+                f"**ISP:** {ip_info['isp']} / AS: {ip_info['as']}\n"
+                f"**UA:** {ua_info['raw']}\n"
+                f"**OS:** {ua_info['os']} / ブラウザ: {ua_info['browser']}\n"
+                f"**デバイス:** {ua_info['device']} / Bot判定: {ua_info['is_bot']}\n"
+                f"📍 [Google Maps](https://www.google.com/maps?q={ip_info['lat']},{ip_info['lon']})"
             ),
             "thumbnail": {"url": d["avatar_url"]}
         }
 
         bot.loop.create_task(bot.send_log(embed=embed_data))
 
-        if ip["proxy"] or ip["hosting"]:
+        if ip_info["proxy"] or ip_info["hosting"]:
             bot.loop.create_task(bot.send_log(
                 f"⚠️ **不審なアクセス検出**\n"
                 f"{d['username']}#{d['discriminator']} (ID: {d['id']})\n"
-                f"IP: {ip['ip']} / Proxy: {ip['proxy']} / Hosting: {ip['hosting']}"
+                f"IP: {ip_info['ip']} / Proxy: {ip_info['proxy']} / Hosting: {ip_info['hosting']}"
             ))
 
         bot.loop.create_task(bot.assign_role(d["id"]))
